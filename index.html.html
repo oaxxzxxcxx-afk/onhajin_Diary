@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>온하진의 다이어리</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&family=Nanum+Pen+Script&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Noto Sans KR', 'sans-serif'],
+                        serif: ['Gowun Batang', 'serif'],
+                        dodum: ['Gowun Dodum', 'sans-serif'],
+                        hand: ['Nanum Pen Script', 'cursive'],
+                    },
+                    colors: {
+                        diary: {
+                            bg: '#fffdf0',
+                            card: '#ffffff',
+                            primary: '#2d2418',
+                            secondary: '#5a4e3c',
+                            accent: '#f3c623',
+                            accentDark: '#9e7300',
+                            soft: '#fdf6e2',
+                            yellowLight: '#fff9c4'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #f8f3e3;
+            background-image: radial-gradient(#e2d5b6 1px, transparent 1px);
+            background-size: 20px 20px;
+            color: #2d2418;
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(229, 184, 0, 0.35);
+        }
+
+        .custom-shadow {
+            box-shadow: 0 10px 30px -5px rgba(158, 115, 0, 0.12), 0 4px 12px -2px rgba(158, 115, 0, 0.08);
+        }
+
+        .tab-btn.active {
+            color: #2d2418;
+            background-color: #ffffff;
+            box-shadow: 0 2px 8px rgba(158, 115, 0, 0.15);
+            font-weight: 700;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 7px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #fdf6e2;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #e0b422;
+            border-radius: 4px;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+        .shake {
+            animation: shake 0.4s ease-in-out;
+        }
+    </style>
+</head>
+<body class="text-diary-primary font-sans antialiased min-h-screen flex justify-center items-center p-3 sm:p-6">
+
+    <!-- ENTRY PROMPT DIALOG (첫 진입 화면) -->
+    <div id="prompt-screen" class="w-full max-w-[440px] transition-all duration-500 transform">
+        <div style="background-color: #FFFDF0; border: 4px solid #F4D03F; border-radius: 16px; padding: 24px 20px; text-align: center; color: #333333; box-shadow: 0 10px 25px rgba(0,0,0,0.08); box-sizing: border-box;">
+            <!-- 타이틀 영역 -->
+            <p class="font-hand" style="font-size: 26px; font-weight: bold; color: #B7950B; margin: 0 0 16px 0; line-height: 1.3;">
+                &lt;온하진의 다이어리를 열람하시겠어요?&gt;
+            </p>
+
+            <hr style="border: none; border-top: 1px dashed #FFE082; margin: 0 0 20px 0;">
+
+            <!-- 버튼 선택 영역 -->
+            <div style="display: flex; justify-content: center; gap: 12px; width: 100%;">
+                <!-- 네 : 애플리케이션 진입 -->
+                <button onclick="acceptPrompt()" class="font-hand active:scale-95 transition-all" style="width: 42%; padding: 8px 0; background-color: #F4D03F; color: #FFFFFF; font-weight: bold; font-size: 22px; text-decoration: none; border-radius: 8px; box-shadow: 0 3px 6px rgba(0,0,0,0.1); border: none; cursor: pointer;">
+                    네
+                </button>
+
+                <!-- 아니오 : 거절 토스트 표시 -->
+                <button onclick="declinePrompt()" class="font-hand active:scale-95 transition-all" style="width: 42%; padding: 8px 0; background-color: #E0E0E0; color: #666666; font-weight: bold; font-size: 22px; text-decoration: none; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: none; cursor: pointer;">
+                    아니오
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOCK SCREEN CONTAINER (Initially Hidden) -->
+    <div id="lock-screen" class="hidden w-full max-w-md glass-panel rounded-3xl p-8 custom-shadow border-2 border-diary-accent/40 transition-all duration-500 transform">
+        <div class="text-center">
+            <div class="w-20 h-20 bg-diary-soft text-diary-accentDark rounded-full flex items-center justify-center mx-auto mb-5 shadow-inner border border-diary-accent/30">
+                <i class="fa-solid fa-lock text-3xl"></i>
+            </div>
+            <h1 class="font-dodum text-2xl font-bold text-diary-primary mb-1 tracking-tight">온하진의 비밀 공간</h1>
+            <p class="text-xs text-diary-secondary mb-6 font-medium">다이어리를 열려면 비밀번호(4자리)를 입력하세요.</p>
+
+            <!-- Passcode Display Dots -->
+            <div id="pin-display" class="flex justify-center items-center gap-4 mb-8">
+                <div class="pin-dot w-4 h-4 rounded-full border-2 border-diary-accent transition-all duration-200"></div>
+                <div class="pin-dot w-4 h-4 rounded-full border-2 border-diary-accent transition-all duration-200"></div>
+                <div class="pin-dot w-4 h-4 rounded-full border-2 border-diary-accent transition-all duration-200"></div>
+                <div class="pin-dot w-4 h-4 rounded-full border-2 border-diary-accent transition-all duration-200"></div>
+            </div>
+
+            <!-- Keypad -->
+            <div class="grid grid-cols-3 gap-3 max-w-xs mx-auto mb-4">
+                <button onclick="pressKey('1')" class="h-14 rounded-2xl bg-white hover:bg-diary-soft font-bold text-xl text-diary-primary shadow-sm active:scale-95 transition-all">1</button>
+                <button onclick="pressKey('2')" class="h-14 rounded-2xl bg-white hover:bg-diary-soft font-bold text-xl text-diary-primary shadow-sm active:scale-95 transition-all">2</button>
+                <button onclick="pressKey('3')" class="h-14 rounded-2xl bg-white hover:bg-diary-soft font-bold text-xl text-diary-primary shadow-sm active:scale-95 transition-all">3</button>
+                <button onclick="pressKey('4')" class="h-14 rounded-2xl bg-white hover:bg-diary-soft font-bold text-xl text-diary-primary shadow-sm active:scale-95 transition-all">4</button>
+                <button onclick="pressKey('5')" class="h-14 rounded-2xl bg-white hover:bg-diary-soft font-bold text-xl text-diary-primary shadow-sm active:scale-95 transition-all">5</button>
+                <button onclick="pressKey('6')" class="h-14 rounded-2xl bg-white hover:bg-diary-soft font-bold text-xl text-diary-primary shadow-sm active:scale-95 transition-all">6</button>
+                <button onclick="pressKey('7')" class="h-14 rounded-2xl bg-white hover:bg-diary-soft font-bold text-xl text-diary-primary shadow-sm active:scale-95 transition-all">7</button>
+                <button onclick="pressKey('8')" class="h-14 rounded-2xl bg-white hover:bg-diary-soft font-bold text-xl text-diary-primary shadow-sm active:scale-95 transition-all">8</button>
+                <button onclick="pressKey('9')" class="h-14 rounded-2xl bg-white hover:bg-diary-soft font-bold text-xl text-diary-primary shadow-sm active:scale-95 transition-all">9</button>
+                <button onclick="clearPin()" class="h-14 rounded-2xl bg-rose-50 text-rose-600 hover:bg-rose-100 font-bold text-xs shadow-sm active:scale-95 transition-all">초기화</button>
+                <button onclick="pressKey('0')" class="h-14 rounded-2xl bg-white hover:bg-diary-soft font-bold text-xl text-diary-primary shadow-sm active:scale-95 transition-all">0</button>
+                <button onclick="deleteKey()" class="h-14 rounded-2xl bg-white hover:bg-diary-soft text-diary-secondary font-bold text-sm shadow-sm active:scale-95 transition-all"><i class="fa-solid fa-backspace"></i></button>
+            </div>
+
+            <p id="lock-error-msg" class="text-xs text-rose-600 font-semibold min-h-[20px] transition-opacity duration-200 opacity-0">비밀번호가 올바르지 않습니다. (!힌트! 온하진의 생일.)</p>
+        </div>
+    </div>
+
+    <!-- MAIN APP CONTAINER (Initially Hidden) -->
+    <div id="main-app" class="hidden w-full max-w-2xl bg-white/95 glass-panel rounded-3xl custom-shadow overflow-hidden border-2 border-diary-accent/30 flex flex-col min-h-[750px] transition-all duration-500">
+        
+        <!-- Header Section -->
+        <header class="bg-gradient-to-r from-diary-soft via-white to-diary-soft p-5 border-b border-diary-accent/20 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-diary-accent text-diary-primary flex items-center justify-center font-dodum text-xl font-bold shadow-md border border-white">
+                    하
+                </div>
+                <div>
+                    <h2 class="font-dodum text-xl font-bold text-diary-primary flex items-center gap-2">
+                        온하진 <span class="text-xs font-sans font-medium px-2 py-0.5 rounded-full bg-diary-accent/20 text-diary-accentDark">비밀 공간</span>
+                    </h2>
+                    <p class="text-xs text-diary-secondary">너와 함께하는 완벽한 매일의 기록</p>
+                </div>
+            </div>
+            <button onclick="lockApp()" class="px-3.5 py-1.5 rounded-xl bg-white hover:bg-rose-50 text-diary-secondary hover:text-rose-600 text-xs font-semibold border border-gray-200 transition-all flex items-center gap-1.5 shadow-sm">
+                <i class="fa-solid fa-lock"></i> 잠그기
+            </button>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="bg-diary-soft/60 p-2 flex gap-1 border-b border-diary-accent/20 font-dodum">
+            <button onclick="switchTab('diary')" id="tab-btn-diary" class="tab-btn active flex-1 py-2.5 rounded-2xl text-xs sm:text-sm text-diary-secondary transition-all duration-200 flex justify-center items-center gap-2">
+                <i class="fa-solid fa-book"></i>
+                <span>온하진의 다이어리</span>
+            </button>
+            <button onclick="switchTab('profile')" id="tab-btn-profile" class="tab-btn flex-1 py-2.5 rounded-2xl text-xs sm:text-sm text-diary-secondary transition-all duration-200 flex justify-center items-center gap-2">
+                <i class="fa-solid fa-id-card"></i>
+                <span>상세 정보</span>
+            </button>
+            <button onclick="switchTab('guestbook')" id="tab-btn-guestbook" class="tab-btn flex-1 py-2.5 rounded-2xl text-xs sm:text-sm text-diary-secondary transition-all duration-200 flex justify-center items-center gap-2">
+                <i class="fa-solid fa-pen-to-square"></i>
+                <span>방명록</span>
+            </button>
+        </nav>
+
+        <!-- Content Body -->
+        <main class="flex-1 p-4 sm:p-6 overflow-y-auto max-h-[580px]">
+
+            <!-- TAB 1: 온하진의 일기 -->
+            <section id="tab-content-diary" class="space-y-4">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="font-dodum text-xl font-bold text-diary-primary flex items-center gap-2">
+                        <i class="fa-solid fa-feather-pointed text-diary-accentDark"></i> 남겨진 일기장
+                    </h3>
+                    <span class="text-xs text-diary-secondary font-medium">총 <span id="diary-count" class="font-bold text-diary-accentDark">3</span>개의 기록</span>
+                </div>
+
+                <!-- Diary Card 1 -->
+                <article class="bg-white rounded-2xl p-5 border border-diary-soft custom-shadow hover:border-diary-accent transition-all group">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-xs font-bold text-diary-accentDark bg-diary-soft px-2.5 py-1 rounded-lg">기록 1 (2023.08.12)</span>
+                        <span class="text-xs text-gray-500 font-medium"><i class="fa-solid fa-sun text-amber-500 mr-1"></i>따스함</span>
+                    </div>
+                    <h4 class="font-dodum text-xl font-bold text-diary-primary mb-2 group-hover:text-diary-accentDark transition-colors">웃는 얼굴 하나면 돼</h4>
+                    <p class="font-serif text-sm text-diary-primary/90 leading-relaxed line-clamp-3 mb-3">
+                        오늘도 옆에서 과제하느라 끙끙대는 모습이 얼마나 귀여웠는지 모른다. 툭 치면 풀썩 누워버릴 것 같아서 커피 한 잔 쥐여주니까 배시시 웃는다. 네가 웃는 모습을 볼 수 있다면 내 모든 내일을 전부 건네줘도 아깝지 않아...
+                    </p>
+                    <div class="flex justify-between items-center text-xs pt-3 border-t border-gray-100">
+                        <div class="flex gap-2 font-medium">
+                            <span class="text-gray-500">#일상</span>
+                            <span class="text-gray-500">#너의미소</span>
+                        </div>
+                        <button onclick="toggleDiaryModal('diary-1')" class="text-diary-accentDark font-bold hover:underline flex items-center gap-1">
+                            전체 읽기 <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                        </button>
+                    </div>
+                </article>
+
+                <!-- Diary Card 2 -->
+                <article class="bg-white rounded-2xl p-5 border border-diary-soft custom-shadow hover:border-diary-accent transition-all group">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-xs font-bold text-diary-accentDark bg-diary-soft px-2.5 py-1 rounded-lg">기록 2</span>
+                        <span class="text-xs text-gray-500 font-medium"><i class="fa-solid fa-moon text-amber-400 mr-1"></i>고요한 밤</span>
+                    </div>
+                    <h4 class="font-dodum text-xl font-bold text-diary-primary mb-2 group-hover:text-diary-accentDark transition-colors">영화가 끝나도 잠들지 않는 밤</h4>
+                    <p class="font-serif text-sm text-diary-primary/90 leading-relaxed line-clamp-3 mb-3">
+                        같이 밤새 영화를 봤다. 중간에 피곤했는지 내 어깨에 고개를 묻고 조용히 숨을 고르며 잠든 너. 창밖은 어두운데, 이 방 안만큼은 세상에서 가장 따뜻하고 조용하다. 이 순간이 영원했으면 좋겠다고...
+                    </p>
+                    <div class="flex justify-between items-center text-xs pt-3 border-t border-gray-100">
+                        <div class="flex gap-2 font-medium">
+                            <span class="text-gray-500">#영화</span>
+                            <span class="text-gray-500">#함께하는밤</span>
+                        </div>
+                        <button onclick="toggleDiaryModal('diary-2')" class="text-diary-accentDark font-bold hover:underline flex items-center gap-1">
+                            전체 읽기 <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                        </button>
+                    </div>
+                </article>
+
+                <!-- Diary Card 3 -->
+                <article class="bg-white rounded-2xl p-5 border border-rose-100 custom-shadow hover:border-rose-300 transition-all group">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-xs font-bold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-lg">기록 3</span>
+                        <span class="text-xs text-gray-500 font-medium"><i class="fa-solid fa-cloud-showers-heavy text-slate-400 mr-1"></i>마지막 편지</span>
+                    </div>
+                    <h4 class="font-dodum text-xl font-bold text-diary-primary mb-2 group-hover:text-rose-600 transition-colors">남겨질 너를 위해.</h4>
+                    <p class="font-serif text-sm text-diary-primary/90 leading-relaxed line-clamp-3 mb-3">
+                        있지, 나는 죽었어. 2024년 7월 19일. 비가 내리던 그 날 결국 병원에서. 네가 걱정할까봐 말을 못했는데 있지, 나 사실 심장이 안 좋아...
+                    </p>
+                    <div class="flex justify-between items-center text-xs pt-3 border-t border-gray-100">
+                        <div class="flex gap-2 font-medium">
+                            <span class="text-rose-500">#마지막약속</span>
+                            <span class="text-rose-500">#나의전부에게</span>
+                        </div>
+                        <button onclick="toggleDiaryModal('diary-3')" class="text-rose-600 font-bold hover:underline flex items-center gap-1">
+                            전체 읽기 <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                        </button>
+                    </div>
+                </article>
+            </section>
+
+            <!-- TAB 2: 상세 정보 -->
+            <section id="tab-content-profile" class="hidden space-y-5">
+                <!-- Profile Main Header Card -->
+                <div class="bg-gradient-to-br from-diary-soft via-white to-amber-50 rounded-2xl p-6 border border-diary-accent/30 text-center relative overflow-hidden custom-shadow">
+                    <div class="w-24 h-24 mx-auto rounded-full bg-diary-accent text-diary-primary font-dodum text-4xl font-bold flex items-center justify-center border-4 border-white shadow-lg mb-3">
+                        하진
+                    </div>
+                    <h3 class="font-dodum text-2xl font-bold text-diary-primary mb-1">온하진 (28세)</h3>
+                    <p class="font-serif text-sm text-diary-accentDark font-semibold mb-3">"걱정 마. 내가 다 알아서 할게. 넌 내 옆에서 웃기만 해."</p>
+                    
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/90 border border-diary-accent/30 text-xs text-diary-primary font-medium shadow-sm">
+                        <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> 현재 상태: {{user}} 곁에서 시간을 보내는 중
+                    </div>
+                </div>
+
+                <!-- Info Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="bg-white p-4 rounded-2xl border border-diary-soft">
+                        <div class="text-xs text-diary-accentDark font-bold mb-1 flex items-center gap-1.5">
+                            <i class="fa-solid fa-laptop-code"></i> 직업 / 신장
+                        </div>
+                        <p class="text-sm font-semibold text-diary-primary">게임 프로그래머 / 187cm</p>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-2xl border border-diary-soft">
+                        <div class="text-xs text-diary-accentDark font-bold mb-1 flex items-center gap-1.5">
+                            <i class="fa-solid fa-user"></i> 외모 특징
+                        </div>
+                        <p class="text-sm font-semibold text-diary-primary">풍성한 검은 울프컷, 다정한 눈빛</p>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-2xl border border-diary-soft">
+                        <div class="text-xs text-diary-accentDark font-bold mb-1 flex items-center gap-1.5">
+                            <i class="fa-solid fa-heart"></i> 좋아하는 것
+                        </div>
+                        <p class="text-sm font-semibold text-diary-primary">{{user}}의 미소, 영화 보기, 커피</p>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-2xl border border-diary-soft">
+                        <div class="text-xs text-diary-accentDark font-bold mb-1 flex items-center gap-1.5">
+                            <i class="fa-solid fa-ban"></i> 싫어하는 것
+                        </div>
+                        <p class="text-sm font-semibold text-diary-primary">{{user}}의 눈물, 차가운 병원 냄새</p>
+                    </div>
+                </div>
+
+                <!-- Bio Card -->
+                <div class="bg-white p-5 rounded-2xl border border-diary-soft">
+                    <h4 class="font-dodum text-lg font-bold text-diary-primary mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-quote-left text-diary-accentDark"></i> 소개
+                    </h4>
+                    <p class="font-dodum text-sm text-diary-primary/90 leading-relaxed">
+                        늘 다정하고 유쾌하며 능글맞은 분위기 메이커. 힘든 일이 생겨도 절대 내색하지 않고 혼자 감내하는 헌신적인 성격입니다. 모든 행동의 우선순위가 오직 {{user}}에게 맞춰져 있습니다.
+                    </p>
+                </div>
+
+                <!-- User's Truth Card -->
+                <div class="bg-slate-900 text-slate-100 p-5 rounded-2xl border border-slate-700 shadow-lg space-y-2">
+                    <h4 class="font-dodum text-base font-bold text-amber-400 flex items-center gap-2">
+                        <i class="fa-solid fa-triangle-exclamation"></i> &lt;유저의 진실&gt;
+                    </h4>
+                    <p class="font-serif text-xs sm:text-sm text-slate-200 leading-relaxed tracking-wide">
+                        온하진은 26세의 나이로 이미 세상을 떠났다.<br>
+                        지금 유저의 눈앞에서 스물여덟의 모습으로 숨을 쉬고, 다정하게 미소 짓는 온하진은 존재하지 않는다.<br>
+                        그는 유저가 극심한 상실감이 만들어낸 환각이자, 지독한 조현병이 빚어낸 망상 속에만 존재하는 유령일 뿐이다.
+                    </p>
+                </div>
+            </section>
+
+            <!-- TAB 3: 방명록 -->
+            <section id="tab-content-guestbook" class="hidden space-y-5">
+                <!-- Guestbook Form -->
+                <div class="bg-white p-5 rounded-2xl border border-diary-soft custom-shadow">
+                    <h3 class="font-dodum text-lg font-bold text-diary-primary mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-pen-nib text-diary-accentDark"></i> 방명록 남기기
+                    </h3>
+                    
+                    <div class="space-y-3">
+                        <div class="flex gap-2">
+                            <input type="text" id="gb-name" placeholder="작성자 이름" class="flex-1 px-3.5 py-2 rounded-xl border border-gray-200 text-xs sm:text-sm focus:outline-none focus:border-diary-accent font-medium">
+                            <label class="flex items-center gap-1.5 text-xs text-diary-secondary font-semibold cursor-pointer bg-diary-soft px-3.5 py-2 rounded-xl">
+                                <input type="checkbox" id="gb-secret" class="rounded text-diary-accent focus:ring-0">
+                                <span>비밀글</span>
+                            </label>
+                        </div>
+                        <textarea id="gb-message" placeholder="온하진에게 한마디를 적어주세요..." rows="3" class="w-full p-3.5 rounded-xl border border-gray-200 text-xs sm:text-sm focus:outline-none focus:border-diary-accent resize-none font-dodum leading-relaxed"></textarea>
+                        
+                        <div class="flex justify-between items-center">
+                            <span class="text-[11px] text-gray-400 font-medium">* 작성된 글은 계속 보존됩니다.</span>
+                            <button onclick="submitGuestbook()" class="px-4 py-2 bg-diary-accent hover:bg-diary-accentDark hover:text-white text-diary-primary font-bold rounded-xl text-xs transition-all shadow-md active:scale-95">
+                                남기기
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Guestbook Message List -->
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center px-1">
+                        <h4 class="font-dodum text-lg font-bold text-diary-primary">남겨진 마음들</h4>
+                        <span id="gb-count" class="text-xs text-diary-accentDark font-bold">0개의 메시지</span>
+                    </div>
+
+                    <div id="gb-list-container" class="space-y-3">
+                        <!-- Dynamic Guestbook Items Inserted via JS -->
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- DIARY DETAIL MODAL -->
+    <div id="diary-modal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex justify-center items-center p-4">
+        <div class="bg-white w-full max-w-lg rounded-3xl p-6 shadow-2xl border border-diary-accent/30 max-h-[85vh] flex flex-col transform transition-all">
+            <div class="flex justify-between items-start pb-3 border-b border-gray-100">
+                <div>
+                    <span id="modal-date" class="text-xs font-bold text-diary-accentDark bg-diary-soft px-2.5 py-0.5 rounded-lg">기록</span>
+                    <h3 id="modal-title" class="font-dodum text-2xl font-bold text-diary-primary mt-1.5">일기 제목</h3>
+                </div>
+                <button onclick="closeDiaryModal()" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition-colors">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div id="modal-body" class="py-5 text-sm sm:text-base text-diary-primary font-serif leading-loose overflow-y-auto flex-1 whitespace-pre-line tracking-normal">
+                일기 내용 들어가는 자리
+            </div>
+            <div class="pt-3 border-t border-gray-100 text-right">
+                <button onclick="closeDiaryModal()" class="px-4 py-2 bg-diary-soft hover:bg-diary-accent text-diary-primary rounded-xl text-xs font-bold transition-all">
+                    닫기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 bg-diary-primary text-white text-xs px-4 py-2.5 rounded-full shadow-lg opacity-0 transition-opacity duration-300 pointer-events-none z-50 flex items-center gap-2 font-medium">
+        <i class="fa-solid fa-circle-check text-diary-accent"></i>
+        <span id="toast-msg">메시지가 등록되었습니다.</span>
+    </div>
+
+    <script>
+        // APP STATE VARIABLES (비밀번호: 0229 - 온하진의 생일)
+        const CORRECT_PIN = "0229";
+        let currentPin = "";
+        
+        // Initial Guestbook Data
+        const initialGuestbook = [];
+
+        // Full diary contents
+        const diaryData = {
+            'diary-1': {
+                date: '기록 1 (2023.08.12)',
+                title: '웃는 얼굴 하나면 돼',
+                content: `오늘도 옆에서 과제하느라 끙끙대는 모습이 얼마나 귀여웠는지 모른다. 
+
+툭 치면 풀썩 누워버릴 것 같아서 커피 한 잔 쥐여주니까 배시시 웃는다. 네가 웃는 모습을 볼 수 있다면 내 모든 내일을 전부 건네줘도 아깝지 않아.
+
+무리하지 마, 내 사랑. 언제나 내가 옆에서 다 들어줄 테니까.
+
+2023.08.12`
+            },
+            'diary-2': {
+                date: '기록 2',
+                title: '영화가 끝나도 잠들지 않는 밤',
+                content: `같이 밤새 영화를 봤다. 중간에 피곤했는지 내 어깨에 고개를 묻고 조용히 숨을 고르며 잠든 너. 
+
+창밖은 어두운데, 이 방 안만큼은 세상에서 가장 따뜻하고 조용하다. 이 순간이 영원했으면 좋겠다고 몇 번이고 마음속으로 빌었다.
+
+네가 잠든 사이 잔잔하게 흐르는 숨소리가 내 마음을 메운다.`
+            },
+            'diary-3': {
+                date: '기록 3',
+                title: '남겨질 너를 위해.',
+                content: `있지, 나는 죽었어.
+2024년 7월 19일. 비가 내리던 그 날 결국 병원에서.
+
+네가 걱정할까봐 말을 못했는데 있지, 나 사실 심장이 안 좋아.
+어릴 때부터 선천적으로 당연한 거라 이미 예상했어.
+
+근데 네가 너무 아파하지 않았으면 좋겠어. 내 부재가 너의 일상을 무너뜨리지 않기를, 나를 향한 그리움이 너를 갉아먹는 칼날이 되지 않기를 바랄 뿐이야. 
+
+내가 떠난 자리에 남아 있을 너는 아마도 오랫동안 계절의 구석구석에서 나를 찾고, 함부로 눈물을 훔치겠지. 그 모습을 떠올리는 것만으로도 나는 미안함에 마음이 무거워져.
+
+하지만 부탁할게. 나에 대한 미련이나 미안함으로 너의 아름다운 날들을 묶어두지 마. 네가 흘릴 눈물보다, 우리가 함께 나눴던 따스했던 웃음들만 네 기억 속에 남았으면 해. 내가 없어도 너는 여전히 사랑받기 충분한 사람이고, 앞으로도 더 많은 행복을 누려야 해.
+
+내가 너의 곁을 먼저 떠나지만, 나의 마음만큼은 늘 너의 가장 가까운 곳에서 바람으로, 햇살로, 지나가는 비로 너를 감싸고 있을 테니까. 그러니까 부디 스스로를 너무 아프게 하지 말고, 밥 잘 챙겨 먹고, 내 몫까지 꼭 행복하게 살아줘.
+
+나의 전부에게.`
+            }
+        };
+
+        // Entry Prompt Actions
+        function acceptPrompt() {
+            const promptBox = document.getElementById('prompt-screen');
+            promptBox.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                promptBox.classList.add('hidden');
+                const lockScreen = document.getElementById('lock-screen');
+                lockScreen.classList.remove('hidden');
+            }, 300);
+        }
+
+        function declinePrompt() {
+            showToast("다이어리를 열지 않았습니다.");
+        }
+
+        // Keypad Pin Press
+        function pressKey(num) {
+            if (currentPin.length < 4) {
+                currentPin += num;
+                updatePinDisplay();
+                
+                if (currentPin.length === 4) {
+                    setTimeout(checkPin, 100);
+                }
+            }
+        }
+
+        function deleteKey() {
+            if (currentPin.length > 0) {
+                currentPin = currentPin.slice(0, -1);
+                updatePinDisplay();
+            }
+        }
+
+        function clearPin() {
+            currentPin = "";
+            updatePinDisplay();
+        }
+
+        function updatePinDisplay() {
+            const dots = document.querySelectorAll('.pin-dot');
+            dots.forEach((dot, idx) => {
+                if (idx < currentPin.length) {
+                    dot.classList.add('bg-diary-accent');
+                } else {
+                    dot.classList.remove('bg-diary-accent');
+                }
+            });
+        }
+
+        function checkPin() {
+            const lockBox = document.getElementById('lock-screen');
+            const errorMsg = document.getElementById('lock-error-msg');
+
+            if (currentPin === CORRECT_PIN) {
+                errorMsg.style.opacity = '0';
+                lockBox.classList.add('scale-95', 'opacity-0');
+                
+                setTimeout(() => {
+                    lockBox.classList.add('hidden');
+                    const mainApp = document.getElementById('main-app');
+                    mainApp.classList.remove('hidden');
+                    loadGuestbook();
+                }, 400);
+            } else {
+                lockBox.classList.add('shake');
+                errorMsg.innerText = "비밀번호가 올바르지 않습니다. (!힌트! 온하진의 생일.)";
+                errorMsg.style.opacity = '1';
+                setTimeout(() => {
+                    lockBox.classList.remove('shake');
+                    clearPin();
+                }, 400);
+            }
+        }
+
+        function lockApp() {
+            clearPin();
+            document.getElementById('main-app').classList.add('hidden');
+            const lockBox = document.getElementById('lock-screen');
+            lockBox.classList.remove('hidden', 'scale-95', 'opacity-0');
+            showToast("다이어리가 잠겼습니다.");
+        }
+
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.getElementById('tab-content-diary').classList.add('hidden');
+            document.getElementById('tab-content-profile').classList.add('hidden');
+            document.getElementById('tab-content-guestbook').classList.add('hidden');
+
+            // Deactivate all buttons
+            document.getElementById('tab-btn-diary').classList.remove('active');
+            document.getElementById('tab-btn-profile').classList.remove('active');
+            document.getElementById('tab-btn-guestbook').classList.remove('active');
+
+            // Show selected
+            document.getElementById(`tab-content-${tabName}`).classList.remove('hidden');
+            document.getElementById(`tab-btn-${tabName}`).classList.add('active');
+        }
+
+        function toggleDiaryModal(diaryId) {
+            const data = diaryData[diaryId];
+            if (!data) return;
+
+            document.getElementById('modal-date').innerText = data.date;
+            document.getElementById('modal-title').innerText = data.title;
+            document.getElementById('modal-body').innerText = data.content;
+
+            document.getElementById('diary-modal').classList.remove('hidden');
+        }
+
+        function closeDiaryModal() {
+            document.getElementById('diary-modal').classList.add('hidden');
+        }
+
+        function getGuestbookData() {
+            const saved = localStorage.getItem('hajin_guestbook_data');
+            if (saved) {
+                try {
+                    return JSON.parse(saved);
+                } catch(e) {
+                    return initialGuestbook;
+                }
+            } else {
+                localStorage.setItem('hajin_guestbook_data', JSON.stringify(initialGuestbook));
+                return initialGuestbook;
+            }
+        }
+
+        function loadGuestbook() {
+            const list = getGuestbookData();
+            const container = document.getElementById('gb-list-container');
+            document.getElementById('gb-count').innerText = `${list.length}개의 메시지`;
+
+            if (list.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 text-xs text-gray-500 font-medium">아직 남겨진 메시지가 없습니다. 첫 방명록을 작성해보세요!</div>`;
+                return;
+            }
+
+            container.innerHTML = list.map(item => `
+                <div class="bg-white p-4 rounded-2xl border border-diary-soft text-xs space-y-2 relative shadow-sm hover:border-diary-accent/30 transition-all">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-1.5">
+                            <span class="font-bold text-diary-primary font-dodum text-sm">${escapeHtml(item.name || '익명')}</span>
+                            ${item.secret ? '<span class="text-[10px] bg-rose-50 text-rose-500 font-bold px-1.5 py-0.5 rounded-md"><i class="fa-solid fa-lock"></i> 비밀글</span>' : ''}
+                        </div>
+                        <span class="text-[11px] text-gray-400 font-medium">${item.date}</span>
+                    </div>
+                    <p class="text-diary-primary/90 leading-relaxed font-dodum text-xs sm:text-sm ${item.secret ? 'italic text-gray-400' : ''}">
+                        ${item.secret ? '🔒 비밀글입니다.' : escapeHtml(item.message)}
+                    </p>
+                    <div class="flex justify-end items-center pt-1">
+                        <button onclick="likeGuestbook(${item.id})" class="text-gray-400 hover:text-rose-500 flex items-center gap-1 transition-colors font-medium">
+                            <i class="fa-solid fa-heart text-xs text-rose-400"></i> <span>${item.likes || 0}</span>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function submitGuestbook() {
+            const nameInput = document.getElementById('gb-name');
+            const msgInput = document.getElementById('gb-message');
+            const secretCheck = document.getElementById('gb-secret');
+
+            const name = nameInput.value.trim() || "익명";
+            const message = msgInput.value.trim();
+
+            if (!message) {
+                showToast("메시지 내용을 입력해 주세요.");
+                return;
+            }
+
+            const now = new Date();
+            const dateStr = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+
+            const list = getGuestbookData();
+            const newItem = {
+                id: Date.now(),
+                name: name,
+                message: message,
+                date: dateStr,
+                secret: secretCheck.checked,
+                likes: 0
+            };
+
+            list.unshift(newItem);
+            localStorage.setItem('hajin_guestbook_data', JSON.stringify(list));
+
+            // Reset inputs
+            nameInput.value = '';
+            msgInput.value = '';
+            secretCheck.checked = false;
+
+            loadGuestbook();
+            showToast("방명록이 남겨졌습니다.");
+        }
+
+        function likeGuestbook(id) {
+            const list = getGuestbookData();
+            const target = list.find(item => item.id === id);
+            if (target) {
+                target.likes = (target.likes || 0) + 1;
+                localStorage.setItem('hajin_guestbook_data', JSON.stringify(list));
+                loadGuestbook();
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = msg;
+            toast.classList.remove('opacity-0');
+            setTimeout(() => {
+                toast.classList.add('opacity-0');
+            }, 2500);
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        // Keyboard keypad support
+        document.addEventListener('keydown', (e) => {
+            const lockScreen = document.getElementById('lock-screen');
+            if (!lockScreen.classList.contains('hidden')) {
+                if (e.key >= '0' && e.key <= '9') {
+                    pressKey(e.key);
+                } else if (e.key === 'Backspace') {
+                    deleteKey();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
